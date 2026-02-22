@@ -6,8 +6,15 @@ import (
 )
 
 func (cfg *apiConfig) metrics(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
 	value := cfg.fileserverHits.Load()
-	fmt.Fprintf(w, "Hits: %d", value)
+	html := fmt.Sprintf(`<html>
+  <body>
+    <h1>Welcome, Chirpy Admin</h1>
+    <p>Chirpy has been visited %d times!</p>
+  </body>
+</html>`, value)
+	fmt.Fprint(w, html)
 }
 
 func (cfg *apiConfig) reset(w http.ResponseWriter, r *http.Request) {
