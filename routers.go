@@ -19,6 +19,7 @@ func (cfg *apiConfig) routes() *mux.Router {
 	r.PathPrefix("/app").Handler(cfg.middlewareMetricsInc(http.StripPrefix("/app", fs)))
 
 	r.HandleFunc("/api/healthz", healthz).Methods("GET")
+	r.HandleFunc("/api/validate_chirp", validate_chirp).Methods("POST")
 	r.HandleFunc("/admin/metrics", cfg.metrics).Methods("GET")
 	r.HandleFunc("/admin/reset", cfg.reset).Methods("POST")
 	return r
