@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"unicode/utf8"
 )
 
@@ -11,37 +12,43 @@ type Validate struct {
 	Body string `json:"body"`
 }
 
-func respondWithError(w http.ResponseWriter, code int, msg string) {
-	response := struct {
+func respondWithError(w http.ResponseWriter, status int, msg string) {
+	payload := struct {
 		Error string `json:"error"`
 	}{
 		Error: msg,
 	}
-	jsonData, _ := json.Marshal(response)
-	w.WriteHeader(code)
-	w.Write(jsonData)
+	data, _ := json.Marshal(payload)
+	w.WriteHeader(status)
+	w.Write(data)
 }
 
-func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-	jsonData, err := json.Marshal(payload)
+func respondWithJSON(w http.ResponseWriter, status int, payload interface{}) {
+	data, err := json.Marshal(payload)
 	if err != nil {
 		log.Println("can't parse go type to json")
 	}
-	w.WriteHeader(code)
-	w.Write(jsonData)
+	w.WriteHeader(status)
+	w.Write(data)
 }
 
-func (v *Validate) check(valid Validate) (interface{}, int) {
-	var code int
-	var new_data struct {
-		Valid bool `json:"valid"`
+func (v *Validate) check(input Validate) (Validate, int) {
+	if utf8.RuneCountInString(input.Body) > 140 {
+		return Validate{}, http.StatusBadRequest
 	}
-	if utf8.RuneCountInString(valid.Body) > 140 {
-		new_data.Valid = false
-		code = 400
-	} else {
-		new_data.Valid = true
-		code = 200
+	input.Body = v.filter(input.Body)
+	return input, http.StatusOK
+}
+
+func (v *Validate) filter(sentence string) string {
+	words := strings.Split(sentence, " ")
+	var b strings.Builder
+	for _, w := range words {
+		switch strings.ToLower(w) {
+		case "kerfuffle", "sharbert", "fornax":
+			w = "****"
+		}
+		b.WriteString(w + " ")
 	}
-	return new_data, code
+	return strings.TrimSpace(b.String())
 }

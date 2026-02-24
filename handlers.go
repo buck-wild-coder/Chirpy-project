@@ -9,14 +9,14 @@ import (
 
 func (cfg *apiConfig) metrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	value := cfg.fileserverHits.Load()
-	body := `<html>
+	hitCount := cfg.fileserverHits.Load()
+	template := `<html>
 			<body>
 				<h1>Welcome, Chirpy Admin</h1>
 				<p>Chirpy has been visited %d times!</p>
 			</body>
 			</html>`
-	html := fmt.Sprintf(body, value)
+	html := fmt.Sprintf(template, hitCount)
 	fmt.Fprint(w, html)
 }
 
@@ -33,12 +33,17 @@ func healthz(w http.ResponseWriter, r *http.Request) {
 }
 
 func validate_chirp(w http.ResponseWriter, r *http.Request) {
-	var valid Validate
-	data, err := io.ReadAll(r.Body)
+	var payload Validate
+	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		respondWithError(w, 400, "Bad request, try again.")
 	}
-	json.Unmarshal(data, &valid)
-	new_data, code := valid.check(valid)
-	respondWithJSON(w, code, new_data)
+	json.Unmarshal(bodyBytes, &payload)
+	cleaned, statusCode := payload.check(payload)
+	response := struct {
+		CleanedBody string `json:"cleaned_body"`
+	}{
+		CleanedBody: cleaned.Body,
+	}
+	respondWithJSON(w, statusCode, response)
 }
