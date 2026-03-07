@@ -52,12 +52,18 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 }
 
 const getHash = `-- name: GetHash :one
-select hashed_password from users where email = $1
+select id, created_at, updated_at, email, hashed_password from users where email = $1
 `
 
-func (q *Queries) GetHash(ctx context.Context, email string) (string, error) {
+func (q *Queries) GetHash(ctx context.Context, email string) (User, error) {
 	row := q.db.QueryRowContext(ctx, getHash, email)
-	var hashed_password string
-	err := row.Scan(&hashed_password)
-	return hashed_password, err
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.HashedPassword,
+	)
+	return i, err
 }

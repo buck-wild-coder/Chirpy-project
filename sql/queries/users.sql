@@ -10,4 +10,4 @@ VALUES (
 RETURNING *;
 
 -- name: GetHash :one
-select hashed_password from users where email = $1;
+select * from users where email = $1;

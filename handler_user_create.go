@@ -11,11 +11,12 @@ import (
 )
 
 type User struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
-	Password  string    `json:"password"`
+	ID                 uuid.UUID `json:"id"`
+	CreatedAt          time.Time `json:"created_at"`
+	UpdatedAt          time.Time `json:"updated_at"`
+	Email              string    `json:"email"`
+	Password           string    `json:"password"`
+	Expires_in_seconds int       `json:"expires_in_seconds"`
 }
 
 func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request) {
@@ -30,11 +31,13 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters", err)
 		return
 	}
+
 	pass, err := auth.HashPassword(params.Password)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Can't hash the password", err)
 		return
 	}
+
 	user, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
 		ID:             uuid.New(),
 		CreatedAt:      time.Now().UTC(),
@@ -42,11 +45,11 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		Email:          params.Email,
 		HashedPassword: pass,
 	})
+
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create user", err)
 		return
 	}
-
 	respondWithJSON(w, http.StatusCreated, response{
 		User: User{
 			ID:        user.ID,
