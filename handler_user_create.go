@@ -40,8 +40,6 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 
 	user, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
 		ID:             uuid.New(),
-		CreatedAt:      time.Now().UTC(),
-		UpdatedAt:      time.Now().UTC(),
 		Email:          params.Email,
 		HashedPassword: pass,
 	})

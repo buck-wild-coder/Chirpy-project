@@ -7,17 +7,18 @@ import (
 	"time"
 
 	"github.com/buck-wild-coder/Chirpy-project/internal/auth"
+	"github.com/buck-wild-coder/Chirpy-project/internal/database"
 	"github.com/google/uuid"
 )
 
 type logins struct {
-	ID                 uuid.UUID `json:"id"`
-	Email              string    `json:"email"`
-	Password           string    `json:"password"`
-	CreatedAt          time.Time `json:"created_at"`
-	UpdatedAt          time.Time `json:"updated_at"`
-	Expires_in_seconds int       `json:"expires_in_seconds"`
-	Token              string    `json:"token"`
+	ID           uuid.UUID `json:"id"`
+	Email        string    `json:"email"`
+	Password     string    `json:"password"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	Token        string    `json:"token"`
+	RefreshToken string    `json:"refresh_token"`
 }
 
 func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
@@ -33,9 +34,6 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if params.Expires_in_seconds == 0 {
-		params.Expires_in_seconds = 1
-	}
 	db, err := cfg.db.GetHash(r.Context(), params.Email)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "401 Unauthorized", fmt.Errorf("401 Unauthorized"))
@@ -46,16 +44,26 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusUnauthorized, "401 Unauthorized", fmt.Errorf("401 Unauthorized"))
 	}
 
-	login := logins{
-		ID:                 db.ID,
-		Email:              params.Email,
-		CreatedAt:          db.CreatedAt,
-		UpdatedAt:          db.UpdatedAt,
-		Expires_in_seconds: params.Expires_in_seconds,
+	tokenString, err := auth.MakeJWT(db.ID, cfg.secret, time.Hour)
+	token := auth.MakeRefreshToken()
+	arg := database.CreateRefreshTokenParams{
+		Token:     token,
+		UserID:    db.ID,
+		ExpiresAt: time.Now().UTC().AddDate(0, 0, 60),
 	}
-	duration := time.Duration(login.Expires_in_seconds) * time.Second
-	tokenString, err := auth.MakeJWT(login.ID, cfg.secret, duration)
-	login.Token = tokenString
+	returnToken, err := cfg.db.CreateRefreshToken(r.Context(), arg)
+	if err != nil {
+		return
+	}
+
+	login := logins{
+		ID:           db.ID,
+		Email:        params.Email,
+		CreatedAt:    db.CreatedAt,
+		UpdatedAt:    db.UpdatedAt,
+		Token:        tokenString,
+		RefreshToken: returnToken.Token,
+	}
 
 	respondWithJSON(w, http.StatusOK, login)
 }
