@@ -17,6 +17,7 @@ type User struct {
 	Email              string    `json:"email"`
 	Password           string    `json:"password"`
 	Expires_in_seconds int       `json:"expires_in_seconds"`
+	Ischirpyred        bool      `json:"is_chirpy_red"`
 }
 
 func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request) {

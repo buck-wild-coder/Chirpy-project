@@ -19,6 +19,7 @@ type logins struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 	Token        string    `json:"token"`
 	RefreshToken string    `json:"refresh_token"`
+	Ischirpyred  bool      `json:"is_chirpy_red"`
 }
 
 func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
@@ -63,6 +64,7 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt:    db.UpdatedAt,
 		Token:        tokenString,
 		RefreshToken: returnToken.Token,
+		Ischirpyred:  db.IsChirpyRed,
 	}
 
 	respondWithJSON(w, http.StatusOK, login)

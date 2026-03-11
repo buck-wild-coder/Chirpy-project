@@ -9,7 +9,7 @@ import (
 	"github.com/buck-wild-coder/Chirpy-project/internal/database"
 )
 
-func (cfg *apiConfig) handlerUpdateChirp(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerUpdateUser(w http.ResponseWriter, r *http.Request) {
 	tokenString, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		respondWithError(w, 401, tokenFailure, errors.New(tokenFailure))
@@ -43,10 +43,11 @@ func (cfg *apiConfig) handlerUpdateChirp(w http.ResponseWriter, r *http.Request)
 	})
 
 	respondWithJSON(w, http.StatusOK, User{
-		ID:        user.ID,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Email:     user.Email,
-		Password:  user.HashedPassword,
+		ID:          user.ID,
+		CreatedAt:   user.CreatedAt,
+		UpdatedAt:   user.UpdatedAt,
+		Email:       user.Email,
+		Password:    user.HashedPassword,
+		Ischirpyred: user.IsChirpyRed,
 	})
 }
